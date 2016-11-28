@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: template grupo2
+Resources:
+
+  VPC:
+    Type: "AWS::CloudFormation::Stack"
+    Properties: 
+      TimeoutInMinutes: 60
+      TemplateURL: https://s3.amazonaws.com/cf-devops2/JJV/cftemplate.yaml
+
+  ELB:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TimeoutInMinutes: 60
+      TemplateURL: https://s3.amazonaws.com/cf-devops2/JJV/cfelb.yaml
+      Parameters:
+        PublicSubnetC:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.PublicSubnetC
+        PublicSubnetB:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.PublicSubnetB   
+        Sgelb:
+          Fn::GetAtt:
+          - SG
+          - Outputs.SecurityGroupElb
+
+  SG:
+    Type: "AWS::CloudFormation::Stack"
+    Properties: 
+      TimeoutInMinutes: 60
+      TemplateURL: https://s3.amazonaws.com/cf-devops2/JJV/cfsg.yaml
+      Parameters:
+        VPCId:
+          Fn::GetAtt:
+          - VPC
+          - Outputs.VPCg2
+
+  EC2:
+    Type: "AWS::CloudFormation::Stack"
+    Properties: 
+      TimeoutInMinutes: 60
+      TemplateURL: https://s3.amazonaws.com/cf-devops2/JJV/cfec2.yaml
+      Parameters:
+        SubnetId: 
+          Fn::GetAtt:
+          - VPC
+          - Outputs.SubnetId
+        SecurityGroupEc2:
+          Fn::GetAtt:
+          - SG
+          - Outputs.SecurityGroupEc2
+
+  IAM:
+    Type: "AWS::CloudFormation::Stack"
+    Properties: 
+      TimeoutInMinutes: 60
+      TemplateURL: https://s3.amazonaws.com/cf-devops2/JJV/cfiam.yaml
+
+  LC:
+    Type: "AWS::CloudFormation::Stack"
+    Properties: 
+      TimeoutInMinutes: 60
+      TemplateURL: https://s3.amazonaws.com/cf-devops2/JJV/cflc.yaml
+      Parameters:
+        SecurityGroupEc2:
+          Fn::GetAtt:
+            - SG
+            - Outputs.SecurityGroupEc2
+        LoadBalancer:
+          Fn::GetAtt:
+            - ELB
+            - Outputs.LoadBalancer
