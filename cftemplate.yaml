@@ -1,0 +1,174 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VPCg2:
+    Type: "AWS::EC2::VPC"
+    Properties: 
+      CidrBlock: '10.2.0.0/16'
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+      InstanceTenancy: 'default'
+      Tags:
+        - Key: Name
+          Value: vpc.g2 
+
+  subnetg2pubC:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId:
+        Ref: 'VPCg2'
+      CidrBlock: '10.2.11.0/24'
+      AvailabilityZone: "us-east-1c"
+      Tags:
+        - Key: Name
+          Value: subnetg2-pubC
+
+  subnetg2pubB:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId:
+        Ref: 'VPCg2'
+      CidrBlock: '10.2.12.0/24'
+      AvailabilityZone: "us-east-1b"
+      Tags:
+        - Key: Name
+          Value: subnetg2-pubB
+
+  subnetg2privC:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId:
+        Ref: 'VPCg2'
+      CidrBlock: '10.2.21.0/24'
+      AvailabilityZone: "us-east-1c"
+      Tags:
+        - Key: Name
+          Value: subnetg2-privC
+
+  subnetg2privB:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId:
+        Ref: 'VPCg2'
+      CidrBlock: '10.2.22.0/24'
+      AvailabilityZone: "us-east-1b"
+      Tags:
+        - Key: Name
+          Value: subnetg2-privB
+
+  igwg2:
+    Type: "AWS::EC2::InternetGateway"
+    Properties:
+      Tags:
+      - Key: Name
+        Value: igwg2
+
+  eipg2:
+    Type: "AWS::EC2::EIP"
+    Properties:
+      Domain: "vpc" 
+
+  AttachGateway:
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    Properties:
+      VpcId:
+        Ref: VPCg2
+      InternetGatewayId:
+        Ref: igwg2
+
+  natgwg2:
+    DependsOn: AttachGateway
+    Type: "AWS::EC2::NatGateway"
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+        - eipg2
+        - AllocationId
+      SubnetId:
+        Ref: subnetg2pubC
+
+  rtg2Pub:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId:
+        Ref: VPCg2
+      Tags:
+        - Key: Name
+          Value: rtg2Pub   
+
+  rtg2Priv:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId:
+        Ref: VPCg2
+      Tags:
+        - Key: Name
+          Value: rtg2Pri
+
+  routeDefaultPub:
+    Type: "AWS::EC2::Route"
+    DependsOn: igwg2
+    Properties:
+      RouteTableId:
+        Ref: rtg2Pub
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: igwg2
+
+  routeDefaultPriv:
+    Type: "AWS::EC2::Route"
+    DependsOn: natgwg2
+    Properties:
+      RouteTableId:
+        Ref: rtg2Priv
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:
+        Ref: natgwg2
+
+  SubnetRouteTableAssociationPubC:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId:
+        Ref: subnetg2pubC
+      RouteTableId:
+        Ref: rtg2Pub
+
+  SubnetRouteTableAssociationPrivC:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId:
+        Ref: subnetg2privC
+      RouteTableId:
+        Ref: rtg2Priv
+
+  SubnetRouteTableAssociationPubB:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId:
+        Ref: subnetg2pubB
+      RouteTableId:
+        Ref: rtg2Pub
+
+  SubnetRouteTableAssociationPrivB:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId:
+        Ref: subnetg2privB
+      RouteTableId:
+        Ref: rtg2Priv
+
+Outputs:
+  PublicSubnetC:
+    Description: "ID Subnet publica C"
+    Value: !Ref subnetg2pubC
+  
+  PublicSubnetB:
+    Description: "ID Subnet publica B"
+    Value: !Ref subnetg2pubB
+
+  VPCg2:
+    Description: "ID VPC g2"
+    Value: !Ref VPCg2
+
+  SubnetId:
+    Description: "Subnet Id for instance"
+    Value: !Ref subnetg2pubB

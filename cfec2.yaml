@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  SubnetId:
+    Type: String
+    Description: "ID de subred publica Zona A"
+  SecurityGroupEc2:
+    Type: String
+    Description: "ID security group for EC2 instance"
+
+Resources:
+  ec2instance:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      ImageId: "ami-b73b63a0"
+      KeyName: "key-grupo2"
+      NetworkInterfaces:
+      - AssociatePublicIpAddress: true
+        DeviceIndex: "0"
+        GroupSet:
+        - Ref: "SecurityGroupEc2"
+        SubnetId:
+          Ref: SubnetId
+      InstanceType: "t2.micro"

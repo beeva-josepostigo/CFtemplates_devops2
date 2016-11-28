@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  SecurityGroupEc2:
+    Type: String
+    Description: "Security group for EC2 instances"
+  LoadBalancer:
+    Type: String
+    Description: "Load balancer for ASG"
+
+Resources:
+  lc:
+    Type: "AWS::AutoScaling::LaunchConfiguration"
+    Properties: 
+      ImageId: "ami-b73b63a0"
+      SecurityGroups: 
+      - Ref: SecurityGroupEc2
+      InstanceType: "t2.micro"
+
+  asg:
+    Type: "AWS::AutoScaling::AutoScalingGroup"
+    Properties: 
+      AvailabilityZones:
+        Fn::GetAZs: ""
+      LaunchConfigurationName: 
+        Ref: lc
+      MinSize: "2"
+      MaxSize: "2"
+      LoadBalancerNames: 
+        - Ref: LoadBalancer
+      

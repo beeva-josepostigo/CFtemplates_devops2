@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  PublicSubnetB:
+    Type: String
+    Description: "ID subnet Publica B" 
+  PublicSubnetC:
+    Type: String
+    Description: "ID subnet publica C"
+  Sgelb:
+    Type: String
+    Description: "ID sg para el lb"
+
+Resources:
+  elbg2:
+    Type: "AWS::ElasticLoadBalancing::LoadBalancer"
+    Properties:
+      SecurityGroups:
+      - Ref: Sgelb
+      Listeners:
+      - LoadBalancerPort: '80'
+        InstancePort: '80'
+        Protocol: TCP
+      HealthCheck:
+        Target: TCP:80
+        HealthyThreshold: '2'
+        UnhealthyThreshold: '2'
+        Interval: '5'
+        Timeout: '2'
+      Subnets:
+        - Ref: PublicSubnetB
+        - Ref: PublicSubnetC  
+
+Outputs:
+  LoadBalancer:
+    Description: "LB ID"
+    Value: !Ref elbg2
